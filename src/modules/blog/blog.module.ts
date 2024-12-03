@@ -11,6 +11,7 @@ import { BlogBookmarkEntity } from "./entities/bookmark.entity";
 import { BlogCommentEntity } from "./entities/blog-comment.entity";
 import { CategoryBlogService } from "../category-blog/category-blog.service";
 import { S3Service } from "../s3/s3.service";
+import { BlogCommentService } from "./services/comment.service";
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { S3Service } from "../s3/s3.service";
       BlogCommentEntity,
     ]),
   ],
-  providers: [BlogService, CategoryBlogService, S3Service],
+  providers: [BlogService, CategoryBlogService, S3Service, BlogCommentService],
   controllers: [BlogController],
 })
 export class BlogModule {}

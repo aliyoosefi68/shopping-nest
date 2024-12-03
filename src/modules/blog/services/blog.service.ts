@@ -24,6 +24,7 @@ import {
 import { PaginationDto } from "src/common/dto/pagination.dto";
 import { BlogLikesEntity } from "../entities/blog-like.entity";
 import { BlogBookmarkEntity } from "../entities/bookmark.entity";
+import { BlogCommentService } from "./comment.service";
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -36,6 +37,7 @@ export class BlogService {
     private blogBookmarkRepository: Repository<BlogBookmarkEntity>,
     private s3Service: S3Service,
     private categoryService: CategoryBlogService,
+    private blogCommentService: BlogCommentService,
     @Inject(REQUEST) private request: Request,
     private dataSource: DataSource,
 
@@ -293,89 +295,89 @@ export class BlogService {
     return { message };
   }
 
-  // async findOneBySlug(slug: string, paginationDto: PaginationDto) {
-  //   const userId = this.request?.user?.id;
-  //   const blog = await this.blogRepository
-  //     .createQueryBuilder(EntityName.Blog)
-  //     .leftJoin("blog.categories", "categories")
-  //     .leftJoin("categories.category", "category")
-  //     .leftJoin("blog.author", "author")
-  //     .leftJoin("author.profile", "profile")
-  //     .addSelect([
-  //       "categories.id",
-  //       "category.title",
-  //       "author.username",
-  //       "author.id",
-  //       "profile.nick_name",
-  //     ])
-  //     .where({ slug })
-  //     .loadRelationCountAndMap("blog.likes", "blog.likes")
-  //     .loadRelationCountAndMap("blog.bookmarks", "blog.bookmarks")
-  //     .getOne();
-  //   if (!blog) throw new NotFoundException(NotFoundMessage.NotFoundPost);
-  //   const commentsData = await this.blogCommentService.findCommentsOfBlog(
-  //     blog.id,
-  //     paginationDto
-  //   );
-  //   let isLiked = false;
-  //   let isBookmarked = false;
-  //   if (userId && !isNaN(userId) && userId > 0) {
-  //     isLiked = !!(await this.blogLikeRepository.findOneBy({
-  //       userId,
-  //       blogId: blog.id,
-  //     }));
-  //     isBookmarked = !!(await this.blogBookmarkRepository.findOneBy({
-  //       userId,
-  //       blogId: blog.id,
-  //     }));
-  //   }
-  //   const queryRunner = this.dataSource.createQueryRunner();
-  //   await queryRunner.connect();
-  //   const suggestBlogs = await queryRunner.query(`
-  //         WITH suggested_blogs AS (
-  //             SELECT
-  //                 blog.id,
-  //                 blog.slug,
-  //                 blog.title,
-  //                 blog.description,
-  //                 blog.time_for_study,
-  //                 blog.image,
-  //                 json_build_object(
-  //                     'username', u.username,
-  //                     'author_name', p.nick_name,
-  //                     'image', p.image_profile
-  //                 ) AS author,
-  //                 array_agg(DISTINCT cat.title) AS categories,
-  //                 (
-  //                     SELECT COUNT(*) FROM blog_likes
-  //                     WHERE blog_likes."blogId" = blog.id
-  //                 ) AS likes,
-  //                 (
-  //                     SELECT COUNT(*) FROM blog_bookmarks
-  //                     WHERE blog_bookmarks."blogId" = blog.id
-  //                 ) AS bookmarks,
-  //                 (
-  //                     SELECT COUNT(*) FROM blog_comments
-  //                     WHERE blog_comments."blogId" = blog.id
-  //                 ) AS comments
-  //             FROM blog
-  //             LEFT JOIN public.user u ON blog."authorId" = u.id
-  //             LEFT JOIN profile p ON p."userId" = u.id
-  //             LEFT JOIN blog_category bc ON blog.id = bc."blogId"
-  //             LEFT JOIN category cat ON bc."categoryId" = cat.id
-  //             GROUP BY blog.id, u.username, p.nick_name, p.image_profile
-  //             ORDER BY RANDOM()
-  //             LIMIT 3
+  async findOneBySlug(slug: string, paginationDto: PaginationDto) {
+    const userId = this.request?.user?.id;
+    const blog = await this.blogRepository
+      .createQueryBuilder("blog")
+      .leftJoin("blog.categories", "categories")
+      .leftJoin("categories.category", "category")
+      .leftJoin("blog.author", "author")
+      .leftJoin("author.profile", "profile")
+      .addSelect([
+        "categories.id",
+        "category.title",
+        "author.username",
+        "author.id",
+        "profile.nick_name",
+      ])
+      .where({ slug })
+      .loadRelationCountAndMap("blog.likes", "blog.likes")
+      .loadRelationCountAndMap("blog.bookmarks", "blog.bookmarks")
+      .getOne();
+    if (!blog) throw new NotFoundException("مقاله مورد نظر یافت نشد");
+    const commentsData = await this.blogCommentService.findCommentsOfBlog(
+      blog.id,
+      paginationDto
+    );
+    let isLiked = false;
+    let isBookmarked = false;
+    if (userId && !isNaN(userId) && userId > 0) {
+      isLiked = !!(await this.blogLikeRepository.findOneBy({
+        userId,
+        blogId: blog.id,
+      }));
+      isBookmarked = !!(await this.blogBookmarkRepository.findOneBy({
+        userId,
+        blogId: blog.id,
+      }));
+    }
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    const suggestBlogs = await queryRunner.query(`
+          WITH suggested_blogs AS (
+              SELECT
+                  blog.id,
+                  blog.slug,
+                  blog.title,
+                  blog.description,
+                  blog.time_for_study,
+                  blog.image,
+                  json_build_object(
+                      'username', u.username,
+                      'author_name', p.nick_name,
+                      'image', p.image_profile
+                  ) AS author,
+                  array_agg(DISTINCT cat.title) AS categories,
+                  (
+                      SELECT COUNT(*) FROM blog_likes
+                      WHERE blog_likes."blogId" = blog.id
+                  ) AS likes,
+                  (
+                      SELECT COUNT(*) FROM blog_bookmarks
+                      WHERE blog_bookmarks."blogId" = blog.id
+                  ) AS bookmarks,
+                  (
+                      SELECT COUNT(*) FROM blog_comments
+                      WHERE blog_comments."blogId" = blog.id
+                  ) AS comments
+              FROM blog
+              LEFT JOIN public.user u ON blog."authorId" = u.id
+              LEFT JOIN profile p ON p."userId" = u.id
+              LEFT JOIN blog_category bc ON blog.id = bc."blogId"
+              LEFT JOIN category cat ON bc."categoryId" = cat.id
+              GROUP BY blog.id, u.username, p.nick_name, p.image_profile
+              ORDER BY RANDOM()
+              LIMIT 3
 
-  //         )
-  //         SELECT * FROM suggested_blogs
-  //     `);
-  //   return {
-  //     blog,
-  //     isLiked,
-  //     isBookmarked,
-  //     commentsData,
-  //     suggestBlogs,
-  //   };
-  // }
+          )
+          SELECT * FROM suggested_blogs
+      `);
+    return {
+      blog,
+      isLiked,
+      isBookmarked,
+      commentsData,
+      suggestBlogs,
+    };
+  }
 }
