@@ -5,16 +5,19 @@ import {
   Get,
   MaxFileSizeValidator,
   ParseFilePipe,
+  Patch,
   Put,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
 import { ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { UserService } from "./user.service";
-import { ProfileDto } from "./dto/profile.dto";
+import { ChangeEmailDto, ProfileDto } from "./dto/profile.dto";
 import { UploadFilesS3 } from "src/common/interceptors/upload-file.interceptor";
 import { FormType } from "src/common/enum/formType.enum";
 import { AuthDecorator } from "src/common/decorator/auth.decorator";
+import { Response } from "express";
 
 @Controller("/user")
 @ApiTags("User")
@@ -44,4 +47,7 @@ export class userController {
   profile() {
     return this.userService.profile();
   }
+
+  @Patch("/change-email")
+  async changeEmail(@Body() emailDto: ChangeEmailDto, @Res() res: Response) {}
 }

@@ -1,4 +1,10 @@
-import { Inject, Injectable, Scope } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  Scope,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserEntity } from "./entity/user.entity";
 import { DeepPartial, Repository } from "typeorm";
@@ -9,6 +15,7 @@ import { Request } from "express";
 import { ProfileEntity } from "./entity/profile.entity";
 import { isDate } from "class-validator";
 import { Gender } from "./enum/gender.enum";
+import { AuthService } from "../auth/auth.service";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -18,6 +25,7 @@ export class UserService {
     @InjectRepository(ProfileEntity)
     private profileRepository: Repository<ProfileEntity>,
     private s3Service: S3Service,
+    private authService: AuthService,
     @Inject(REQUEST) private request: Request
   ) {}
 
@@ -90,4 +98,7 @@ export class UserService {
         .getOne()
     );
   }
+  //
+  //
+  //----------------------change phone---------------------------------
 }

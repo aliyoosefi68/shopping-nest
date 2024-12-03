@@ -90,7 +90,7 @@ export class CatagoryProductService {
     if (image) {
       const { Location, Key } = await this.s3Service.uploadFile(
         image,
-        "snappfood-image"
+        "shop-image"
       );
       if (Location) {
         updateObject["image"] = Location;

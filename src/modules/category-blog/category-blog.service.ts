@@ -82,4 +82,16 @@ export class CategoryBlogService {
       message: "دسته بندی با موفقیت حذف شد",
     };
   }
+
+  async insertByTitle(title: string) {
+    const category = this.categoryRepository.create({
+      title,
+    });
+    return await this.categoryRepository.save(category);
+  }
+
+  async findOneByTitle(title: string) {
+    title = title?.trim()?.toLowerCase();
+    return await this.categoryRepository.findOneBy({ title });
+  }
 }

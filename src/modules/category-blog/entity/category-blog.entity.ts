@@ -1,3 +1,4 @@
+import { BlogCategoryEntity } from "src/modules/blog/entities/blog-category.entity";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity("category-blog")
@@ -8,6 +9,6 @@ export class CategoryBlogEntity {
   title: string;
   @Column({ nullable: true })
   priority: number;
-  // @OneToMany(() => BlogCategoryEntity, blog => blog.category)
-  // blog_categories: BlogCategoryEntity[];
+  @OneToMany(() => BlogCategoryEntity, (blog) => blog.category)
+  blog_categories: BlogCategoryEntity[];
 }

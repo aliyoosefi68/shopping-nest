@@ -4,11 +4,16 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { ProfileEntity } from "./profile.entity";
+import { BlogEntity } from "src/modules/blog/entities/blog.entity";
+import { BlogBookmarkEntity } from "src/modules/blog/entities/bookmark.entity";
+import { BlogCommentEntity } from "src/modules/blog/entities/blog-comment.entity";
+import { BlogLikesEntity } from "src/modules/blog/entities/blog-like.entity";
 
 @Entity("user")
 export class UserEntity {
@@ -38,6 +43,19 @@ export class UserEntity {
   agentId: number;
   @Column({ nullable: true })
   profileId: number;
+
+  @Column({ nullable: true })
+  new_email: string;
+
+  @Column({ nullable: true })
+  new_phone: string;
+
+  @Column({ nullable: true, default: false })
+  verify_email: boolean;
+
+  @Column({ nullable: true, default: false })
+  verify_phone: boolean;
+
   @CreateDateColumn()
   created_at: Date;
   @UpdateDateColumn()
@@ -47,4 +65,13 @@ export class UserEntity {
   @OneToOne(() => ProfileEntity, (profile) => profile.user, { nullable: true })
   @JoinColumn()
   profile: ProfileEntity;
+
+  @OneToMany(() => BlogEntity, (blog) => blog.author)
+  blogs: BlogEntity[];
+  @OneToMany(() => BlogLikesEntity, (like) => like.user)
+  blog_likes: BlogLikesEntity[];
+  @OneToMany(() => BlogBookmarkEntity, (bookmark) => bookmark.user)
+  blog_bookmarks: BlogBookmarkEntity[];
+  @OneToMany(() => BlogCommentEntity, (comment) => comment.user)
+  blog_comments: BlogCommentEntity[];
 }

@@ -5,6 +5,7 @@ import { UserModule } from "./modules/user/user.module";
 import { CategoryProductModule } from "./modules/category-product/category.module";
 import { SellerModule } from "./modules/sellers/seller.module";
 import { CategoryBlogModule } from "./modules/category-blog/category-blog.module";
+import { BlogModule } from "./modules/blog/blog.module";
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CategoryBlogModule } from "./modules/category-blog/category-blog.module
     SellerModule,
     CategoryProductModule,
     CategoryBlogModule,
+    BlogModule,
   ],
   controllers: [],
   providers: [],

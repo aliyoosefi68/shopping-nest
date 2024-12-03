@@ -90,6 +90,21 @@ export class AuthService {
     };
   }
 
+  async saveOtp(userId: number) {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (user.otp_expires_in >= new Date()) {
+      throw new BadRequestException("کد قبلی هنوز منقضی نشده است");
+    }
+    const code = randomInt(10000, 99999).toString();
+    const expiresIn = new Date(Date.now() + 1000 * 60 * 2);
+
+    user.otp_code = code;
+    user.otp_expires_in = expiresIn;
+    await this.userRepository.save(user);
+
+    return code;
+  }
+
   async checkOtp(checkOtpDto: CheckOtpDto) {
     const { mobile, code } = checkOtpDto;
     const { phoneNumber } = mobileValidation(mobile);
